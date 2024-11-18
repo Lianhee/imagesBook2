@@ -139,7 +139,7 @@
 }
 
 #viewer-container {
-    display: none;
+    display: block;
 }
 
 @media (max-height: 600px) {
