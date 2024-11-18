@@ -64,12 +64,50 @@ class BookViewer {
             }
         });
 
+        // Add share button
+        const shareBtn = document.createElement('button');
+        shareBtn.className = 'btn btn-secondary';
+        shareBtn.innerHTML = '<i class="bi bi-share"></i>';
+        shareBtn.title = 'Share Book';
+        shareBtn.addEventListener('click', () => this.shareBook());
+        document.querySelector('.controls').appendChild(shareBtn);
+
+        // Add clear button
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'btn btn-secondary';
+        clearBtn.innerHTML = '<i class="bi bi-trash"></i>';
+        clearBtn.title = 'Clear All Images';
+        clearBtn.addEventListener('click', () => this.clearImages());
+        document.querySelector('.controls').appendChild(clearBtn);
+
         document.getElementById('prev-btn').addEventListener('click', () => this.previousPage());
         document.getElementById('next-btn').addEventListener('click', () => this.nextPage());
         document.getElementById('fullscreen-btn').addEventListener('click', () => this.toggleFullscreen());
         document.getElementById('zoom-in-btn').addEventListener('click', () => this.zoomIn());
         document.getElementById('zoom-out-btn').addEventListener('click', () => this.zoomOut());
         document.getElementById('reset-zoom-btn').addEventListener('click', () => this.resetZoom());
+    }
+
+    shareBook() {
+        navigator.clipboard.writeText(window.location.href)
+            .then(() => {
+                alert('Share link copied to clipboard!');
+            })
+            .catch(err => {
+                console.error('Failed to copy URL:', err);
+                alert('Failed to copy URL. Please copy it manually from your browser\'s address bar.');
+            });
+    }
+
+    clearImages() {
+        if (confirm('Are you sure you want to clear all images?')) {
+            this.pages = [];
+            this.currentPage = 0;
+            window.location.hash = '';
+            document.getElementById('upload-container').style.display = 'block';
+            document.getElementById('viewer-container').style.display = 'none';
+            document.getElementById('thumbnails').innerHTML = '';
+        }
     }
 
     zoomIn() {
@@ -105,9 +143,9 @@ class BookViewer {
         this.render();
     }
 
-    async loadImages(fileUrls) {
+    async loadImages(imageUrls) {
         this.pages = [];
-        for (let url of fileUrls) {
+        for (let url of imageUrls) {
             const img = new Image();
             img.src = url;
             await new Promise(resolve => {
