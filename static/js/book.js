@@ -10,6 +10,7 @@ class BookViewer {
         this.panOffset = { x: 0, y: 0 };
         this.isDragging = false;
         this.lastMousePos = { x: 0, y: 0 };
+        this.transitionProgress = 0;
         
         this.initializeEvents();
         this.resize();
@@ -139,40 +140,79 @@ class BookViewer {
             x += this.panOffset.x;
             y += this.panOffset.y;
         }
+
+        if (this.isAnimating) {
+            // Apply page turn effect during transition
+            this.ctx.save();
+            const centerX = this.canvas.width / 2;
+            const progress = this.transitionProgress;
+            
+            // Create gradient shadow for page curl
+            const gradient = this.ctx.createLinearGradient(
+                centerX - width / 2,
+                0,
+                centerX + width / 2,
+                0
+            );
+            gradient.addColorStop(0, 'rgba(0,0,0,0.2)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            
+            // Apply perspective transform
+            this.ctx.transform(
+                Math.cos(progress * Math.PI),
+                0,
+                progress / 2,
+                1,
+                x + width / 2 * (1 - Math.cos(progress * Math.PI)),
+                y
+            );
+            
+            // Draw shadow
+            this.ctx.fillStyle = gradient;
+            this.ctx.fillRect(x, y, width, height);
+        }
         
         this.ctx.drawImage(currentImage, x, y, width, height);
+        
+        if (this.isAnimating) {
+            this.ctx.restore();
+        }
     }
 
     async nextPage() {
         if (this.isAnimating || this.currentPage >= this.pages.length - 1) return;
         this.isAnimating = true;
         
-        const steps = 20;
-        for (let i = 0; i < steps; i++) {
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            await new Promise(resolve => setTimeout(resolve, 20));
+        const frames = 30;
+        for (let i = 0; i <= frames; i++) {
+            this.transitionProgress = i / frames;
+            this.render();
+            await new Promise(resolve => setTimeout(resolve, 16)); // ~60fps
         }
         
         this.currentPage++;
         this.resetZoom();
-        this.render();
         this.isAnimating = false;
+        this.transitionProgress = 0;
+        this.render();
     }
 
     async previousPage() {
         if (this.isAnimating || this.currentPage <= 0) return;
         this.isAnimating = true;
         
-        const steps = 20;
-        for (let i = 0; i < steps; i++) {
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            await new Promise(resolve => setTimeout(resolve, 20));
+        const frames = 30;
+        for (let i = frames; i >= 0; i--) {
+            this.transitionProgress = i / frames;
+            this.render();
+            await new Promise(resolve => setTimeout(resolve, 16)); // ~60fps
         }
         
         this.currentPage--;
         this.resetZoom();
-        this.render();
         this.isAnimating = false;
+        this.transitionProgress = 0;
+        this.render();
     }
 
     updateThumbnails() {
