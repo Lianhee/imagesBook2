@@ -14,35 +14,27 @@ document.addEventListener('DOMContentLoaded', function() {
     dropZone.addEventListener('drop', async (e) => {
         e.preventDefault();
         dropZone.classList.remove('dragover');
-        
-        const files = e.dataTransfer.files;
-        await uploadFiles(files);
+        handleFiles(e.dataTransfer.files);
     });
 
     fileInput.addEventListener('change', async (e) => {
-        await uploadFiles(e.target.files);
+        handleFiles(e.target.files);
     });
 
-    async function uploadFiles(files) {
-        const formData = new FormData();
-        for (let file of files) {
-            formData.append('files[]', file);
+    function handleFiles(files) {
+        const validFiles = Array.from(files).filter(file => {
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            return validTypes.includes(file.type);
+        });
+
+        if (validFiles.length === 0) {
+            alert('Please upload valid image files (JPG, PNG, or GIF)');
+            return;
         }
 
-        try {
-            const response = await fetch('/upload', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const data = await response.json();
-            if (data.files) {
-                window.bookViewer.loadImages(data.files);
-                document.getElementById('upload-container').style.display = 'none';
-                document.getElementById('viewer-container').style.display = 'block';
-            }
-        } catch (error) {
-            console.error('Upload failed:', error);
-        }
+        const fileUrls = validFiles.map(file => URL.createObjectURL(file));
+        window.bookViewer.loadImages(fileUrls);
+        document.getElementById('upload-container').style.display = 'none';
+        document.getElementById('viewer-container').style.display = 'block';
     }
 });

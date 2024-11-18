@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Viewer</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">Book Viewer</a>
+        </div>
+    </nav>
+
+    <main class="container my-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div id="upload-container" class="card">
+                    <div class="card-body">
+                        <h2 class="card-title text-center mb-4">Upload Images</h2>
+                        <div id="drop-zone" class="mb-3">
+                            <i class="bi bi-cloud-upload fs-1"></i>
+                            <p class="mb-2">Drag and drop images here</p>
+                            <p class="text-muted">or</p>
+                            <input type="file" id="file-input" multiple accept="image/*" class="d-none">
+                            <button class="btn btn-secondary" onclick="document.getElementById('file-input').click()">
+                                Select Files
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="viewer-container">
+                    <div id="book-container" class="book-container">
+                        <div class="canvas-wrapper">
+                            <canvas id="book-canvas"></canvas>
+                        </div>
+                        <div class="controls">
+                            <button id="prev-btn" class="btn btn-secondary" title="Previous Page">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <button id="zoom-out-btn" class="btn btn-secondary" title="Zoom Out">
+                                <i class="bi bi-zoom-out"></i>
+                            </button>
+                            <button id="reset-zoom-btn" class="btn btn-secondary" title="Reset Zoom">
+                                <i class="bi bi-arrows-angle-contract"></i>
+                            </button>
+                            <button id="zoom-in-btn" class="btn btn-secondary" title="Zoom In">
+                                <i class="bi bi-zoom-in"></i>
+                            </button>
+                            <button id="fullscreen-btn" class="btn btn-secondary" title="Toggle Fullscreen">
+                                <i class="bi bi-fullscreen"></i>
+                            </button>
+                            <button id="next-btn" class="btn btn-secondary" title="Next Page">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="thumbnails" class="thumbnails-container"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="static/js/book.js"></script>
+    <script src="static/js/upload.js"></script>
+</body>
+</html>

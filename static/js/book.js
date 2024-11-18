@@ -32,6 +32,7 @@ class BookViewer {
                     x: e.clientX,
                     y: e.clientY
                 };
+                this.canvas.classList.add('panning');
             }
         });
 
@@ -51,6 +52,7 @@ class BookViewer {
 
         this.canvas.addEventListener('mouseup', () => {
             this.isDragging = false;
+            this.canvas.classList.remove('panning');
         });
 
         this.canvas.addEventListener('wheel', (e) => {
@@ -73,6 +75,7 @@ class BookViewer {
     zoomIn() {
         if (this.zoomLevel < 3) {
             this.zoomLevel *= 1.2;
+            this.canvas.classList.toggle('can-pan', this.zoomLevel > 1);
             this.render();
         }
     }
@@ -83,6 +86,7 @@ class BookViewer {
             if (this.zoomLevel < 1) {
                 this.panOffset = { x: 0, y: 0 };
             }
+            this.canvas.classList.toggle('can-pan', this.zoomLevel > 1);
             this.render();
         }
     }
@@ -90,6 +94,7 @@ class BookViewer {
     resetZoom() {
         this.zoomLevel = 1;
         this.panOffset = { x: 0, y: 0 };
+        this.canvas.classList.remove('can-pan');
         this.render();
     }
 
@@ -100,11 +105,11 @@ class BookViewer {
         this.render();
     }
 
-    async loadImages(files) {
+    async loadImages(fileUrls) {
         this.pages = [];
-        for (let file of files) {
+        for (let url of fileUrls) {
             const img = new Image();
-            img.src = `/uploads/${file}`;
+            img.src = url;
             await new Promise(resolve => {
                 img.onload = resolve;
             });
@@ -120,7 +125,6 @@ class BookViewer {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         const currentImage = this.pages[this.currentPage];
         
-        // Calculate aspect ratio to fit image
         const ratio = Math.min(
             this.canvas.width / currentImage.width,
             this.canvas.height / currentImage.height
@@ -131,23 +135,19 @@ class BookViewer {
         const width = baseWidth * this.zoomLevel;
         const height = baseHeight * this.zoomLevel;
         
-        // Calculate center position
         let x = (this.canvas.width - width) / 2;
         let y = (this.canvas.height - height) / 2;
         
-        // Apply pan offset only when zoomed in
         if (this.zoomLevel > 1) {
             x += this.panOffset.x;
             y += this.panOffset.y;
         }
 
         if (this.isAnimating) {
-            // Apply page turn effect during transition
             this.ctx.save();
             const centerX = this.canvas.width / 2;
             const progress = this.transitionProgress;
             
-            // Create gradient shadow for page curl
             const gradient = this.ctx.createLinearGradient(
                 centerX - width / 2,
                 0,
@@ -157,7 +157,6 @@ class BookViewer {
             gradient.addColorStop(0, 'rgba(0,0,0,0.2)');
             gradient.addColorStop(1, 'rgba(0,0,0,0)');
             
-            // Apply perspective transform
             this.ctx.transform(
                 Math.cos(progress * Math.PI),
                 0,
@@ -167,7 +166,6 @@ class BookViewer {
                 y
             );
             
-            // Draw shadow
             this.ctx.fillStyle = gradient;
             this.ctx.fillRect(x, y, width, height);
         }
@@ -187,7 +185,7 @@ class BookViewer {
         for (let i = 0; i <= frames; i++) {
             this.transitionProgress = i / frames;
             this.render();
-            await new Promise(resolve => setTimeout(resolve, 16)); // ~60fps
+            await new Promise(resolve => setTimeout(resolve, 16));
         }
         
         this.currentPage++;
@@ -205,7 +203,7 @@ class BookViewer {
         for (let i = frames; i >= 0; i--) {
             this.transitionProgress = i / frames;
             this.render();
-            await new Promise(resolve => setTimeout(resolve, 16)); // ~60fps
+            await new Promise(resolve => setTimeout(resolve, 16));
         }
         
         this.currentPage--;
