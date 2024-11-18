@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-12">
+        <div id="book-container" class="book-container">
+            <div class="canvas-wrapper">
+                <canvas id="book-canvas"></canvas>
+            </div>
+            <div class="controls">
+                <button id="prev-btn" class="btn btn-secondary">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button id="fullscreen-btn" class="btn btn-secondary">
+                    <i class="bi bi-fullscreen"></i>
+                </button>
+                <button id="next-btn" class="btn btn-secondary">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+        <div id="thumbnails" class="thumbnails-container"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/book.js') }}"></script>
+{% endblock %}
