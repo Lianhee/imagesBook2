@@ -6,6 +6,10 @@ class BookViewer {
         this.ctx = this.canvas.getContext('2d');
         this.isAnimating = false;
         this.fullscreen = false;
+        this.zoomLevel = 1;
+        this.panOffset = { x: 0, y: 0 };
+        this.isDragging = false;
+        this.lastMousePos = { x: 0, y: 0 };
         
         this.initializeEvents();
         this.resize();
@@ -16,11 +20,76 @@ class BookViewer {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowRight') this.nextPage();
             if (e.key === 'ArrowLeft') this.previousPage();
+            if (e.key === '+') this.zoomIn();
+            if (e.key === '-') this.zoomOut();
+        });
+
+        this.canvas.addEventListener('mousedown', (e) => {
+            if (this.zoomLevel > 1) {
+                this.isDragging = true;
+                this.lastMousePos = {
+                    x: e.clientX,
+                    y: e.clientY
+                };
+            }
+        });
+
+        this.canvas.addEventListener('mousemove', (e) => {
+            if (this.isDragging) {
+                const deltaX = e.clientX - this.lastMousePos.x;
+                const deltaY = e.clientY - this.lastMousePos.y;
+                this.panOffset.x += deltaX;
+                this.panOffset.y += deltaY;
+                this.lastMousePos = {
+                    x: e.clientX,
+                    y: e.clientY
+                };
+                this.render();
+            }
+        });
+
+        this.canvas.addEventListener('mouseup', () => {
+            this.isDragging = false;
+        });
+
+        this.canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            if (e.deltaY < 0) {
+                this.zoomIn();
+            } else {
+                this.zoomOut();
+            }
         });
 
         document.getElementById('prev-btn').addEventListener('click', () => this.previousPage());
         document.getElementById('next-btn').addEventListener('click', () => this.nextPage());
         document.getElementById('fullscreen-btn').addEventListener('click', () => this.toggleFullscreen());
+        document.getElementById('zoom-in-btn').addEventListener('click', () => this.zoomIn());
+        document.getElementById('zoom-out-btn').addEventListener('click', () => this.zoomOut());
+        document.getElementById('reset-zoom-btn').addEventListener('click', () => this.resetZoom());
+    }
+
+    zoomIn() {
+        if (this.zoomLevel < 3) {
+            this.zoomLevel *= 1.2;
+            this.render();
+        }
+    }
+
+    zoomOut() {
+        if (this.zoomLevel > 0.5) {
+            this.zoomLevel /= 1.2;
+            if (this.zoomLevel < 1) {
+                this.panOffset = { x: 0, y: 0 };
+            }
+            this.render();
+        }
+    }
+
+    resetZoom() {
+        this.zoomLevel = 1;
+        this.panOffset = { x: 0, y: 0 };
+        this.render();
     }
 
     resize() {
@@ -56,10 +125,20 @@ class BookViewer {
             this.canvas.height / currentImage.height
         );
         
-        const width = currentImage.width * ratio;
-        const height = currentImage.height * ratio;
-        const x = (this.canvas.width - width) / 2;
-        const y = (this.canvas.height - height) / 2;
+        const baseWidth = currentImage.width * ratio;
+        const baseHeight = currentImage.height * ratio;
+        const width = baseWidth * this.zoomLevel;
+        const height = baseHeight * this.zoomLevel;
+        
+        // Calculate center position
+        let x = (this.canvas.width - width) / 2;
+        let y = (this.canvas.height - height) / 2;
+        
+        // Apply pan offset only when zoomed in
+        if (this.zoomLevel > 1) {
+            x += this.panOffset.x;
+            y += this.panOffset.y;
+        }
         
         this.ctx.drawImage(currentImage, x, y, width, height);
     }
@@ -68,15 +147,14 @@ class BookViewer {
         if (this.isAnimating || this.currentPage >= this.pages.length - 1) return;
         this.isAnimating = true;
         
-        // Page turn animation
         const steps = 20;
         for (let i = 0; i < steps; i++) {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            // Create page curl effect
             await new Promise(resolve => setTimeout(resolve, 20));
         }
         
         this.currentPage++;
+        this.resetZoom();
         this.render();
         this.isAnimating = false;
     }
@@ -88,11 +166,11 @@ class BookViewer {
         const steps = 20;
         for (let i = 0; i < steps; i++) {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            // Create reverse page curl effect
             await new Promise(resolve => setTimeout(resolve, 20));
         }
         
         this.currentPage--;
+        this.resetZoom();
         this.render();
         this.isAnimating = false;
     }
@@ -107,6 +185,7 @@ class BookViewer {
             thumb.innerHTML = `<img src="${img.src}" alt="Page ${index + 1}">`;
             thumb.addEventListener('click', () => {
                 this.currentPage = index;
+                this.resetZoom();
                 this.render();
             });
             container.appendChild(thumb);
